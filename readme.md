@@ -1,5 +1,7 @@
 # SafeArray Bindings
 
+**Unstable! Experimental status**
+
 Provides functions and helpers for Windows COM SafeArray.
 
 There are two bindings, one that loads the Windows shared libraries (DLL) for
