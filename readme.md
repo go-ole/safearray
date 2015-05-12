@@ -2,6 +2,8 @@
 
 **Unstable! Experimental status**
 
+[![GoDoc](https://godoc.org/github.com/go-ole/safearray?status.svg)](https://godoc.org/github.com/go-ole/safearray)
+
 Provides functions and helpers for Windows COM SafeArray.
 
 There are two bindings, one that loads the Windows shared libraries (DLL) for
