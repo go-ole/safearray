@@ -9,14 +9,6 @@
  * All `SafeArray*()` functions are public and have been renamed.
 
 	"SafeArray" has been removed from the function names and the names have been expanded to play better with Go naming standards.
- * All known types are supported and will append to existing type.
-
-	This is done using reflection. The purpose is to allow for any type of Go slice or array to work with SafeArrays and not have to worry too much about creating specific functions for each type to add support.
-
-	The only difference, is that strings and other types may require manual cleanup, but user defined types do not have this problem.
- * `UnmarshalArray()` exists as a single point of creating a COM SafeArray object.
- * `MarshalArray()` exists as a single point to convert COM SafeArray object to Go slice.
- * Multidimensional COM SafeArray are supported.
 
 ## Features
 
@@ -28,6 +20,14 @@
  * `Array` object provides method for appending SafeArray elements to existing Go slice of any type.
  * `Array` object provides automatically returning Go slice based on SafeArray variant type.
  * Provides helper for creating COM SafeArray from any Go slice.
+ * All known types are supported and will append to existing type.
+
+	This is done using reflection. The purpose is to allow for any type of Go slice or array to work with SafeArrays and not have to worry too much about creating specific functions for each type to add support.
+
+	The only difference, is that strings and other types may require manual cleanup, but user defined types do not have this problem.
+ * `UnmarshalArray()` exists as a single point of creating a COM SafeArray object.
+ * `MarshalArray()` exists as a single point to convert COM SafeArray object to Go slice.
+ * Multidimensional COM SafeArray are supported.
 
 **In Progress**
  * Fully documented.
