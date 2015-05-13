@@ -9,7 +9,6 @@
  * All `SafeArray*()` functions are public and have been renamed.
 
 	"SafeArray" has been removed and the names have been expanded to play better with Go naming standards.
- * CGO is supported. (**Still in development. Not tested**)
  * All known types are supported and will append to existing type.
 
 	This is done using reflection. The purpose is to allow for any type of Go slice or array to work with SafeArrays and not have to worry too much about creating specific functions for each type to add support.
@@ -21,6 +20,7 @@
 
 # Features
 
+ * CGO is supported. (**Still in development. Not tested**)
  * All SafeArray functions are available and implemented. (IRecordInfo is not available by default)
  * Conversion for Byte array and String arrays exist.
  * `Array` object provides helper methods for all available SafeArray functions.
