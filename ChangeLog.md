@@ -7,7 +7,7 @@
  * No `SafeArrayConversion` object. These have been moved to `Array` object.
  * `SafeArray` object has been renamed to `COMArray`.
  * All `SafeArray*()` functions are public and have been renamed.
-
+	
 	"SafeArray" has been removed from the function names and the names have been expanded to play better with Go naming standards.
 
 ## Features
