@@ -125,10 +125,10 @@ func GetElement(safearray *COMArray, index int64) (interface{}, error) {
 	return nil, NotImplementedError
 }
 
-// PutElementIn retrieves element value at given index.
+// GetElementDirect retrieves element value at given index.
 //
 // AKA: SafeArrayGetElement in Windows API.
-func PutElementIn(safearray *COMArray, index int64, element interface{}) error {
+func GetElementDirect(safearray *COMArray, index int64, element interface{}) error {
 	return NotImplementedError
 }
 

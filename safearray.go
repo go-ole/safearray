@@ -168,14 +168,14 @@ func (sa *Array) ElementAt(index int64) (interface{}, error) {
 	return GetElement(sa.Array, index)
 }
 
-// ElementFor puts element value into given element.
+// ElementDirect puts element value into given element.
 //
 // You do not need to convert element. It will be typed to the interface. This
 // is an unsafe operation. Element must be passed by reference.
 //
 // XXX: Index must be defined on how it works with multidimensional arrays.
-func (sa *Array) ElementFor(index int64, element interface{}) error {
-	return PutElementIn(sa.Array, index, &element)
+func (sa *Array) ElementDirect(index int64, element interface{}) error {
+	return GetElementDirect(sa.Array, index, &element)
 }
 
 // SetInterfaceID sets the IID for the COM array.
@@ -257,7 +257,7 @@ func (sa *Array) PutInArray(slice interface{}) (err error) {
 	for i := int64(0); i < length; i++ {
 		if kind != string {
 			element := reflect.New(t).Interface()
-			err = PutElementIn(sa.Array, i, &element)
+			err = GetElementDirect(sa.Array, i, &element)
 			if err != nil {
 				return
 			}

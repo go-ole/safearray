@@ -143,14 +143,14 @@ func GetElementSize(safearray *COMArray) (length uint32, err error) {
 
 // GetElement retrieves element at given index.
 func GetElement(safearray *COMArray, index int64) (element interface{}, err error) {
-	err = PutElementIn(safearray, index, &element)
+	err = GetElementDirect(safearray, index, &element)
 	return
 }
 
-// PutElementIn retrieves element value at given index.
+// GetElementDirect retrieves element value at given index.
 //
 // AKA: SafeArrayGetElement in Windows API.
-func PutElementIn(safearray *COMArray, index int64, element interface{}) error {
+func GetElementDirect(safearray *COMArray, index int64, element interface{}) error {
 	return com.MaybeError(C.SafeArrayGetElement(safearray, index, unsafe.Pointer(&element)))
 }
 

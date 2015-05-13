@@ -15,7 +15,7 @@ func IsSlice(value interface{}) bool {
 // GetElementString retrieves string from index.
 func GetElementString(safearray *COMArray, index int64) (str string, err error) {
 	var element *int16
-	err = PutElementIn(safearray, index, &element)
+	err = GetElementDirect(safearray, index, &element)
 	str = com.BstrToString(*(**uint16)(unsafe.Pointer(&element)))
 	com.SysFreeString(element)
 	return
