@@ -2,7 +2,7 @@
 
 **Still in development**
 
-# Changes from go-ole
+## Changes from go-ole
 
  * No `SafeArrayConversion` object. These have been moved to `Array` object.
  * `SafeArray` object has been renamed to `COMArray`.
@@ -18,7 +18,7 @@
  * `MarshalArray()` exists as a single point to convert COM SafeArray object to Go slice.
  * Multidimensional COM SafeArray are supported.
 
-# Features
+## Features
 
  * CGO is supported. (**Still in development. Not tested**)
  * All SafeArray functions are available and implemented. (IRecordInfo is not available by default)
