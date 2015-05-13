@@ -32,3 +32,61 @@ provides helpers for string and byte arrays.
 You will be able to build on other platforms other than Windows, but the
 functions will not do anything and NOOP. If you want to build for Windows, then
 you have to set the GOOS to "windows".
+
+# Array Object
+
+The safearray.Array object exists as a wrapper for the COM SafeArray object and
+provides some helper receiver functions for converting to a Go slice.
+
+```golang
+comSafeArray := someFunctionReturnsCOMSafeArray()
+safearray := &safearray.Array{comSafeArray}
+```
+
+# Convert to Go Array
+
+Converting to a Go array has two options, you can either append to an existing
+Go slice or have a new Go array returned to you.
+
+The example below will append to an existing array. So if `bytes` had existing
+data from either another COM SafeArray or from another code location, it will be
+retained.
+
+```golang
+var bytes []byte
+
+array := &safearray.Array{}
+err := array.PutInArray(&bytes)
+```
+
+The other option is to return an interface{} slice and convert to the correct
+type. The advantage of this, is that it will check the type of the SafeArray and
+build the array for you. This only works for supported Variant types and will
+not work for custom objects. For user defined objects, you will need to use
+`PutInArray()`.
+
+```golang
+array := &safearray.Array{}
+raw, err := array.ToArray()
+bytes, _ := raw.([]byte)
+```
+
+There are also a few helpers for use for converting to a few common Go types. So
+instead of the the above, you could just use `safearray.ToByteArray()`.
+
+```golang
+array := &safearray.Array{}
+bytes, _ := safearray.ToByteArray(array)
+```
+
+A helper exists for converting to Go strings as well. Support is only limited
+to binary string Variant type, but will be extended to support more in the
+future.
+
+# Convert to SafeArray
+
+Support for converting a Go array to a COM SafeArray is limited. This will be
+extended to support built-in Go types and user-defined types. Use is really
+limited to COM servers that require it and very few COM interfaces need it.
+
+**Need examples.**
