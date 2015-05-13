@@ -162,8 +162,8 @@ func GetUpperBound(safearray *COMArray, dimension uint32) (int64, error) {
 // GetVariantType returns data type of SafeArray.
 //
 // AKA: SafeArrayGetVartype in Windows API.
-func GetVariantType(safearray *COMArray) (uint16, error) {
-	return uint16(0), NotImplementedError
+func GetVariantType(safearray *COMArray) (com.VariantType, error) {
+	return com.NullVariantType, NotImplementedError
 }
 
 // Lock locks SafeArray for reading to modify SafeArray.

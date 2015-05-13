@@ -254,10 +254,12 @@ func GetUpperBound(safearray *COMArray, dimension uint32) (upperBound int64, err
 // GetVariantType returns data type of SafeArray.
 //
 // AKA: SafeArrayGetVartype in Windows API.
-func GetVariantType(safearray *COMArray) (varType uint16, err error) {
+func GetVariantType(safearray *COMArray) (varType com.VariantType, err error) {
+	var vt uint16
 	err = com.HResultToError(procSafeArrayGetVartype.Call(
 		uintptr(unsafe.Pointer(safearray)),
-		uintptr(unsafe.Pointer(&varType))))
+		uintptr(unsafe.Pointer(&vt))))
+	varType = com.VariantType(vt)
 	return
 }
 
@@ -281,6 +283,8 @@ func Unlock(safearray *COMArray) (err error) {
 }
 
 // GetPointerOfIndex gets a pointer to an array element.
+//
+// This must be locked before use.
 //
 // AKA: SafeArrayPtrOfIndex in Windows API.
 func GetPointerOfIndex(safearray *COMArray, index int64) (ref uintptr, err error) {
