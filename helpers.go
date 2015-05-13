@@ -1,7 +1,6 @@
 package safearray
 
 import (
-	"errors"
 	"reflect"
 	"unsafe"
 
@@ -20,21 +19,6 @@ func GetElementString(safearray *COMArray, index int64) (str string, err error) 
 	str = com.BstrToString(*(**uint16)(unsafe.Pointer(&element)))
 	com.SysFreeString(element)
 	return
-}
-
-// FromByteArray creates SafeArray from byte array.
-func FromByteArray(slice []byte) (safearray *COMArray, err error) {
-	safearray, err = CreateArrayVector(com.UInteger8VariantType, 0, uint32(len(slice)))
-
-	if safearray == nil {
-		err = errors.New("could not convert []byte to SafeArray")
-		return
-	}
-
-	for i, v := range slice {
-		PutElement(safearray, int64(i), uintptr(unsafe.Pointer(&v)))
-	}
-	return safearray
 }
 
 // ToByteArray converts SafeArray to byte array.
@@ -72,5 +56,19 @@ func MarshalArray(safearray *COMArray, length int64, slice interface{}) (err err
 	}
 
 	err = UnaccessData(safearray)
+	return
+}
+
+// UnmarshalArray puts items from a Go array into a COM SafeArray.
+func UnmarshalArray(safearray *COMArray, slice []interface{}) (safearray *COMArray, err error) {
+	if safearray == nil {
+		err = SafeArrayVectorFailedError
+		return
+	}
+
+	for pos, val := range slice {
+		PutElement(safearray, int64(pos), uintptr(unsafe.Pointer(&val)))
+	}
+
 	return
 }
