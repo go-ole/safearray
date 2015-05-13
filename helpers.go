@@ -27,7 +27,7 @@ func GetElementString(safearray *COMArray, index int64) (str string, err error) 
 // slice.
 func ToByteArray(safearray *Array) (bytes []byte, err error) {
 	bytes = make([]byte, safearray.Length())
-	err = safearray.PutInArray(&bytes)
+	err = safearray.ToArrayDirect(&bytes)
 	return
 }
 
@@ -37,7 +37,7 @@ func ToByteArray(safearray *Array) (bytes []byte, err error) {
 // slice.
 func ToStringArray(safearray *Array) (strings []string) {
 	strings = make([]string, safearray.Length())
-	err = safearray.PutInArray(&strings)
+	err = safearray.ToArrayDirect(&strings)
 	return
 }
 

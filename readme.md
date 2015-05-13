@@ -56,14 +56,14 @@ retained.
 var bytes []byte
 
 array := &safearray.Array{}
-err := array.PutInArray(&bytes)
+err := array.ToArrayDirect(&bytes)
 ```
 
 The other option is to return an interface{} slice and convert to the correct
 type. The advantage of this, is that it will check the type of the SafeArray and
 build the array for you. This only works for supported Variant types and will
 not work for custom objects. For user defined objects, you will need to use
-`PutInArray()`.
+`ToArrayDirect()`.
 
 ```golang
 array := &safearray.Array{}
