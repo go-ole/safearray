@@ -10,6 +10,13 @@ import (
 	"github.com/go-ole/iunknown"
 )
 
+var (
+	NotSliceError              = errors.New("must be a slice")
+	VariantNotImplementedError = errors.New("variant type is not implemented")
+	VariantNotSupportedError   = errors.New("variant type is not supported")
+	SafeArrayVectorFailedError = errors.New("could not convert slice to SafeArray")
+)
+
 // COMArray is how COM handles arrays.
 type COMArray struct {
 	Dimensions   uint16
@@ -29,7 +36,7 @@ type Bounds struct {
 	LowerBound int32
 }
 
-// SafeArray storage container with helpers.
+// Array is wrapper for COMArray with helpers.
 //
 // It is recommended that you use this type instead of the COMArray, because
 // the bounds is a pointer to the SafeArrayBounds and not referenced directly.
@@ -37,7 +44,7 @@ type Array struct {
 	Array *COMArray
 
 	// bounds contains a mirror of the COMArray.Bounds in the Go type.
-	bounds []Bounds
+	bounds [2]Bounds
 }
 
 // Destroy SafeArray object.
@@ -84,6 +91,11 @@ func (sa *Array) Dimensions() (uint32, error) {
 	return GetDimensions(sa.Array)
 }
 
+// ResetDimensions resets the bounds of the SafeArray.
+//
+// If the bounds is less than the current, then memory will be automatically
+// freed. If the bounds is more than the current, then memory will be
+// automatically allocated.
 func (sa *Array) ResetDimensions(bounds []Bounds) error {
 	sa.bounds = bounds
 	return ResetDimensions(sa.Array, &sa.bounds[0])
@@ -178,18 +190,21 @@ func (sa *Array) InterfaceID() (*com.GUID, error) {
 	return GetInterfaceID(sa.Array)
 }
 
+// VariantType returns the variant type, if there is one available.
+//
+// Flag com.HasVariantSafeArrayMask must be set.
 func (sa *Array) VariantType() (varType com.VariantType, err error) {
 	vt, err := GetVariantType(sa.Array)
 	varType = com.VariantType(vt)
 	return
 }
 
-// Lock for modification.
+// Lock SafeArray for modification.
 func (sa *Array) Lock() error {
 	return Lock(sa.Array)
 }
 
-// UnlockArray for reading.
+// Unlock SafeArray for reading.
 func (sa *Array) Unlock() error {
 	return Unlock(sa.Array)
 }
@@ -216,7 +231,7 @@ func (sa *Array) SetRecordInfo(info interface{}) error {
 // array.
 func (sa *Array) PutInArray(slice interface{}) (err error) {
 	if !IsSlice(slice) {
-		err = errors.New("must be a slice.")
+		err = NotSliceError
 		return
 	}
 
@@ -257,6 +272,16 @@ func (sa *Array) PutInArray(slice interface{}) (err error) {
 	}
 }
 
+// ToArray returns array slice based on the supported variant type.
+//
+// If there is no variant type, then an error will be returned.
+//
+// You must also convert the returned value to whatever slice type it should be.
+//
+//     raw, err := array.ToArray()
+//     slice, ok := raw.([]byte)
+//
+// This must be done because the returned type is a slice of interface{}.
 func (sa *Array) ToArray() (slice interface{}, err error) {
 	vt, err := sa.VariantType()
 	if err != nil {
@@ -280,7 +305,7 @@ func (sa *Array) ToArray() (slice interface{}, err error) {
 		err = sa.PutInArray(&slice)
 		return
 	case com.DateVariantType:
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.BinaryStringVariantType, com.ClassIDVariantType:
 		slice = make([]string, sa.Length())
 		err = sa.PutInArray(&slice)
@@ -290,7 +315,7 @@ func (sa *Array) ToArray() (slice interface{}, err error) {
 		err = sa.PutInArray(&slice)
 		return
 	case com.ErrorVariantType:
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.BoolVariantType:
 		slice = make([]uint16, sa.Length())
 		err = sa.PutInArray(&slice)
@@ -369,16 +394,16 @@ func (sa *Array) ToArray() (slice interface{}, err error) {
 		return
 	case com.CArrayVariantType:
 		// TODO: Complete
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.ANSIStringVariantType:
 		// TODO: Complete
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.UnicodeStringVariantType:
 		// TODO: Complete
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.RecordVariantType:
 		// TODO: Complete
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	case com.IntegerPointerVariantType, com.UIntegerPointerVariantType:
 		slice = make([]uintptr, sa.Length())
 		err = sa.PutInArray(&slice)
@@ -389,9 +414,9 @@ func (sa *Array) ToArray() (slice interface{}, err error) {
 		return
 	case com.ClipboardFormatVariantType:
 		// TODO: Complete
-		err = errors.New("variant type is not implemented")
+		err = VariantNotImplementedError
 	default:
-		err = errors.New("variant type is not supported")
+		err = VariantNotSupportedError
 	}
 
 	return
