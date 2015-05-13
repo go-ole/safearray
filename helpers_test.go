@@ -58,7 +58,7 @@ func ExampleGetElementString_quickbooks() {
 	//
 
 	var qbXMLVersions *COMArray
-	var qbXmlVersionStrings []string
+	var qbXMLVersionStrings []string
 	qbXMLVersions = result.ToArray().Array
 
 	// Release Safe Array memory
@@ -78,10 +78,10 @@ func ExampleGetElementString_quickbooks() {
 	}
 
 	totalElements := UpperBounds - LowerBounds + 1
-	qbXmlVersionStrings = make([]string, totalElements)
+	qbXMLVersionStrings = make([]string, totalElements)
 
 	for i := int64(0); i < totalElements; i++ {
-		qbXmlVersionStrings[int32(i)], _ = GetElementString(qbXMLVersions, i)
+		qbXMLVersionStrings[int32(i)], _ = GetElementString(qbXMLVersions, i)
 	}
 
 	//
