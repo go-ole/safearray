@@ -1,6 +1,14 @@
 package safearray
 
-import "github.com/go-ole/com"
+import (
+	"errors"
+	"reflect"
+	"unsafe"
+
+	"github.com/go-ole/com"
+	"github.com/go-ole/idispatch"
+	"github.com/go-ole/iunknown"
+)
 
 // COMArray is how COM handles arrays.
 type COMArray struct {
@@ -9,7 +17,10 @@ type COMArray struct {
 	ElementsSize uint32
 	LocksAmount  uint32
 	Data         uint32
-	Bounds       uintptr
+
+	// This must hold the bytes for two Bounds objects. Use binary.Read() to
+	// get the contents.
+	Bounds [16]byte
 }
 
 // Bounds defines the array boundaries.
@@ -83,10 +94,29 @@ func (sa *Array) ElementSize() (uint32, error) {
 	return GetElementSize(sa.Array)
 }
 
-// TotalElements returns total elements for given dimension.
+// Length returns total elements for SafeArray.
+func (sa *Array) Length() (totalElements int64, err error) {
+	totalElements = 0
+	dimensions, err := sa.Dimensions()
+	if err != nil {
+		return
+	}
+
+	for dimension := uint32(1); dimension <= dimensions; dimension++ {
+		length, err := sa.DimensionLength(dimension)
+		if err != nil {
+			return
+		}
+		totalElements += length
+	}
+
+	return
+}
+
+// DimensionLength returns total elements for given dimension.
 //
 // Dimensions start at 1, this will only be corrected if you enter '0'.
-func (sa *Array) TotalElements(dimension uint32) (totalElements int64, err error) {
+func (sa *Array) DimensionLength(dimension uint32) (totalElements int64, err error) {
 	if dimension < 1 {
 		dimension = 1
 	}
@@ -178,8 +208,191 @@ func (sa *Array) SetRecordInfo(info interface{}) error {
 	return SetRecordInfo(sa.Array, info)
 }
 
-// ToArray converts SafeArray data to arbitrary type slice.
-func (sa *Array) ToArray(value interface{}) (err error) {
-	// TODO: Complete.
-	dimensions := GetDimensions(sa.Array)
+// PutInArray converts SafeArray data in to arbitrary type slice.
+//
+// This works on both single dimensional and multidimensional arrays. It will
+// convert multidimensional to single dimensional arrays. This will not change
+// in the future. A separate method exists for returning a multidimensional
+// array.
+func (sa *Array) PutInArray(slice interface{}) (err error) {
+	if !IsSlice(slice) {
+		err = errors.New("must be a slice.")
+		return
+	}
+
+	dimensions, err := GetDimensions(sa.Array)
+	if err != nil {
+		return
+	}
+
+	length, err := sa.Length()
+	if err != nil {
+		return
+	}
+
+	kind := reflect.ValueOf(slice).Kind()
+
+	if dimensions == 1 && kind != reflect.String {
+		err = MarshalArray(sa.Array, length, &slice)
+		return
+	}
+
+	t := reflect.TypeOf(slice)
+
+	for i := int64(0); i < length; i++ {
+		if kind != string {
+			element := reflect.New(t).Interface()
+			err = PutElementIn(sa.Array, i, &element)
+			if err != nil {
+				return
+			}
+			*slice = append(slice, element)
+		} else {
+			element, err := GetElementString(sa.Array, i)
+			if err != nil {
+				return
+			}
+			*slice = append(slice, element)
+		}
+	}
+}
+
+func (sa *Array) ToArray() (slice interface{}, err error) {
+	vt, err := sa.VariantType()
+	if err != nil {
+		return
+	}
+
+	// Must not have VT_ARRAY and VT_BYREF flags set.
+	// Must not be VT_EMPTY and VT_NULL.
+
+	switch vt {
+	case com.Float32VariantType:
+		slice = make([]float32, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.Float64VariantType:
+		slice = make([]float64, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.CurrencyVariantType:
+		slice = make([]*com.Currency, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.DateVariantType:
+		err = errors.New("variant type is not implemented")
+	case com.BinaryStringVariantType, com.ClassIDVariantType:
+		slice = make([]string, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.IDispatchVariantType:
+		slice = make([]*idispatch.Dispatch, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.ErrorVariantType:
+		err = errors.New("variant type is not implemented")
+	case com.BoolVariantType:
+		slice = make([]uint16, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.VariantVariantType:
+		slice = make([]*com.Variant, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.IUnknownVariantType:
+		slice = make([]*iunknown.Unknown, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.DecimalVariantType:
+		slice = make([]*com.Decimal, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.Integer8VariantType:
+		slice = make([]int8, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.UInteger8VariantType:
+		slice = make([]uint8, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.Integer16VariantType:
+		slice = make([]int16, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.UInteger16VariantType:
+		slice = make([]uint16, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.Integer32VariantType:
+		slice = make([]int32, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.UInteger32VariantType:
+		slice = make([]uint32, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.Integer64VariantType:
+		slice = make([]int64, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.UInteger64VariantType:
+		slice = make([]uint64, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.IntegerVariantType:
+		// Warning: This must match the architecture of the application you wish
+		// to access.
+		slice = make([]int, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.UIntegerVariantType:
+		// Warning: This must match the architecture of the application you wish
+		// to access.
+		slice = make([]uint, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.HResultVariantType:
+		// Warning: This must match the architecture of the application you wish
+		// to access.
+		slice = make([]uintptr, sa.Length())
+		err = sa.PutInArray(&slice)
+		// TODO: Need to turn HResult into OleError.
+		return
+	case com.PointerVariantType:
+		slice = make([]unsafe.Pointer, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.SafeArrayVariantType:
+		slice = make([]*COMArray, sa.Length())
+		err = sa.PutInArray(&slice)
+		// Need to turn into Array objects
+		return
+	case com.CArrayVariantType:
+		// TODO: Complete
+		err = errors.New("variant type is not implemented")
+	case com.ANSIStringVariantType:
+		// TODO: Complete
+		err = errors.New("variant type is not implemented")
+	case com.UnicodeStringVariantType:
+		// TODO: Complete
+		err = errors.New("variant type is not implemented")
+	case com.RecordVariantType:
+		// TODO: Complete
+		err = errors.New("variant type is not implemented")
+	case com.IntegerPointerVariantType, com.UIntegerPointerVariantType:
+		slice = make([]uintptr, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.FileTimeVariantType:
+		slice = make([]*com.FileTime, sa.Length())
+		err = sa.PutInArray(&slice)
+		return
+	case com.ClipboardFormatVariantType:
+		// TODO: Complete
+		err = errors.New("variant type is not implemented")
+	default:
+		err = errors.New("variant type is not supported")
+	}
+
+	return
 }
