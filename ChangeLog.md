@@ -8,7 +8,7 @@
  * `SafeArray` object has been renamed to `COMArray`.
  * All `SafeArray*()` functions are public and have been renamed.
 
-	"SafeArray" has been removed and the names have been expanded to play better with Go naming standards.
+	"SafeArray" has been removed from the function names and the names have been expanded to play better with Go naming standards.
  * All known types are supported and will append to existing type.
 
 	This is done using reflection. The purpose is to allow for any type of Go slice or array to work with SafeArrays and not have to worry too much about creating specific functions for each type to add support.
